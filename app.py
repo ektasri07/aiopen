@@ -140,4 +140,4 @@ if __name__ == "__main__":
     app = web.Application()
     app.router.add_post("/api/messages", messages)
 
-    web.run_app(app, host="0.0.0.0", port=int(os.getenv("PORT", 3978)))
+    web.run_app(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
