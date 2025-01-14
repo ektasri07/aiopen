@@ -3,6 +3,7 @@ from botbuilder.core import ActivityHandler, MessageFactory, TurnContext
 from botbuilder.schema import Activity, ChannelAccount
 import pandas as pd
 from azure.identity import DefaultAzureCredential
+from botbuilder.core.integration import aiohttp_error_middleware
 import openai
 import logging
 import os
@@ -119,21 +120,6 @@ class AzureCostBot(ActivityHandler):
             'resource_groups': []
         }
         return query_info
-        
-        @web.middleware
-async def error_middleware(request, handler):
-    try:
-        response = await handler(request)
-        if response.status == 404:
-            return web.json_response({'error': 'Not Found'}, status=404)
-        return response
-    except web.HTTPException as ex:
-        if ex.status == 404:
-            return web.json_response({'error': 'Not Found'}, status=404)
-        raise
-    except Exception as ex:
-        logging.exception("Unhandled exception")
-        return web.json_response({'error': 'Internal Server Error'}, status=500)
 
 if __name__ == "__main__":
     from botbuilder.core import BotFrameworkAdapter, BotFrameworkAdapterSettings
@@ -152,7 +138,7 @@ if __name__ == "__main__":
         response = await adapter.process_activity(activity, auth_header, bot.on_turn)
         return web.json_response(data=response.body, status=response.status)
 
-     app = web.Application(middlewares=[error_middleware])
+     app = web.Application(middlewares=[aiohttp_error_middleware])
     app.router.add_post("/api/messages", messages)
 
     web.run_app(app, host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
